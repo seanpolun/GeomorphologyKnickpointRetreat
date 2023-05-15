@@ -15,10 +15,10 @@ authors:
     affiliation: University of Missouri
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.7938035
+    value: 10.5281/zenodo.7938405
 repository-code: >-
   https://github.com/seanpolun/GeomorphologyKnickpointRetreat
-doi: 10.5281/zenodo.7938035
+doi: 10.5281/zenodo.7938405
 date-released: 2023-05-15
 abstract: >-
   This software calculates the rate of knickpoint retreat
