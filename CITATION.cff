@@ -18,6 +18,8 @@ identifiers:
     value: 10.5281/zenodo.7938035
 repository-code: >-
   https://github.com/seanpolun/GeomorphologyKnickpointRetreat
+doi: 10.5281/zenodo.7938035
+date-released: 2023-05-15
 abstract: >-
   This software calculates the rate of knickpoint retreat
   and determines the calibration using TCN uplift rates.
