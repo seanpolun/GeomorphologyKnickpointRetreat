@@ -22,7 +22,10 @@ function SampleStruct = Calc2StageUplift(SampleStruct)
 
 %% Initialize variables
 P0 = SampleStruct.P0; 
-P0_unc = SampleStruct.P0_unc; 
+% I was doing P0 unc in a bad way, we should just use 10% because that is
+% what Cronus uses
+% P0_unc = SampleStruct.P0_unc; 
+P0_unc = 0.10 * P0; 
 N_meas = SampleStruct.N_meas; 
 N_unc = SampleStruct.N_unc; 
 height = SampleStruct.height * 100; % convert m to cm 
@@ -33,7 +36,9 @@ att_len_unc = 0.1 * att_len; % 10% unc
 lambda = 2.3028e-6;
 density = SampleStruct.density; % g/cc
 Z_star = (att_len / density); 
-Z_star_unc = sqrt(((SampleStruct.dens_unc ./ density).^2) + ((att_len_unc ./ att_len).^2)).* Z_star; 
+% Z_star_unc = sqrt(((SampleStruct.dens_unc ./ density).^2) + ((att_len_unc ./ att_len).^2)).* Z_star; 
+% Again, just use 10%
+Z_star_unc = 0.10 * Z_star; 
 
 
 %% Calculate Endmember states
@@ -98,7 +103,7 @@ St1_U = @(Ne,P0,lambda,Z_star) (Z_star .* (P0 - (Ne.*lambda)))./Ne;
 
 St2_U = @(Ne,N0,P0,lambda,height) height./((-1./lambda).*log(1 - ((lambda.*(N0 - Ne))./P0))); 
 
-U_range = [0:0.00001:0.5];
+U_range = [0:0.0001:2.0];
 Ne_range = St1_Ne(P0, lambda, U_range, Z_star);
 too_many_atoms = Ne_range < N_meas;
 Ne_range = Ne_range(too_many_atoms);

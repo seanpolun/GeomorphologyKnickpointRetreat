@@ -1,5 +1,5 @@
 list = who; 
-outName = 'new_2_25_21.csv'; 
+outName = 'new_10_21_22.csv'; 
 fid = fopen(outName,'w');
 header1 = 'Name,Theta,Downstream Nodes,m,Ce,Ce Uncert,Age Kp,Uncert,Uplift Rate,Uplift Uncert'; 
 header2 = ' , , , ,[m/ka],[m/ka],[ka],[ka],[m/ka],[m/ka]'; 

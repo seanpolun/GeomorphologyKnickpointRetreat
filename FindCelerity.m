@@ -35,12 +35,13 @@ x = DrainStruct.MDist;
 Z = DrainStruct.Elev; 
 xKP = DrainStruct.xKP; 
 Area = DrainStruct.FlowArea; 
+A_pix_size = (x(2) - x(1))^2; 
 
 % Initialize default (uncorrelated) uncertainties
-def_m_unc = 0.01;
-def_n_unc = 0.005; 
-def_S_unc = 0.05; 
-def_A_unc = 2700;
+def_m_unc = 0.01;  % 10% 
+def_n_unc = 0.005; % 0.5% 
+def_S_unc = 0.05; % 5%
+def_A_unc = 3 * A_pix_size; 
 
 
 [~,finder] = min(abs(x - xKP));  
@@ -56,6 +57,7 @@ S = abs(differentiate(cf,xds'));
 
 K = K * 1000; 
 K_unc = K_unc * 1000; 
+K_unc_p = K_unc / K; 
 Cefun = @(K,m,A,S,n) K.*(A.^m).*(S.^(n-1)); 
 
 nsim = 4000; 
@@ -63,10 +65,12 @@ nsim = 4000;
 leng11 = maxXI - finder; 
 num_nodes = leng11 + 1;
 Ce_err_out = zeros(nsim,num_nodes); 
+
+%% Calculate Uncorrellated error 
 Terr_out = zeros(nsim,1); 
 for i = 1:nsim
     % K1 = normrnd(K,K_unc);
-    K1 = K; 
+    K1 = 1; % changing things so K is out of the integral
     m1 = normrnd(m, def_m_unc); 
     % m1 = m; 
     n1 = normrnd(n,def_n_unc);
@@ -83,8 +87,8 @@ for i = 1:nsim
 %         
 %     end
     Ce_err_vec = Cefun(K1,m1,A_ds1,S1,n1);
-    Ce_err_out(i,:) = Ce_err_vec;
-    Terr_out(i) = trapz(xds,1./Ce_err_vec); 
+    Ce_err_out(i,:) = Ce_err_vec * normrnd(K, K_unc);
+    Terr_out(i) = trapz(xds,1./Ce_err_vec)*(1/K); 
 end
 % Ce_mean = nanmean(Ce_err_out);
 % Ce_std = nanstd(Ce_err_out);
@@ -95,10 +99,12 @@ end
 if ~isreal(Terr_out)
     Terr_out(imag(Terr_out) ~= 0) = NaN; 
 end
+
 %% Generate complete t_err for error correllation
 Terr_out2 = zeros(nsim,1); 
 for i = 1:nsim
-    K1 = normrnd(K,K_unc);
+    % K1 = normrnd(K,K_unc);
+    K1 = normrnd(1/K, (1/K)*K_unc_p); 
     % K1 = K; 
     m1 = normrnd(m, def_m_unc); 
     % m1 = m; 
@@ -108,6 +114,7 @@ for i = 1:nsim
     A_err = (randn(length(Ads),1) .* def_A_unc)'; 
     A_ds1 = abs(Ads + A_err);
     % S1 = S';
+    % A_ds1 = Ads; 
     %S1 = normrnd(S,S_unc); 
 
 %     for j = 1:leng11
@@ -115,12 +122,13 @@ for i = 1:nsim
 %         Ce_err_out(i,j) = Cefun(K1,m1,Ads,j,S1,n1);
 %         
 %     end
-    Ce_err_vec = Cefun(K1,m1,A_ds1,S1,n1);
+    Ce_err_vec = Cefun(1,m1,A_ds1,S1,n1);
     % Ce_err_out(i,:) = Ce_err_vec;
-    Terr_out2(i) = trapz(xds,1./Ce_err_vec); 
+    Terr_out2(i) = trapz(xds,1./Ce_err_vec)*(K1); 
+    % Terr_out2(i) = trapz(xds, 1./Ce_err_vec); 
 end
 if ~isreal(Terr_out2)
-    Terr_out(imag(Terr_out2) ~= 0) = NaN; 
+    Terr_out2(imag(Terr_out2) ~= 0) = NaN; 
 end
 Terr_out2(Terr_out2 < 0) = NaN; 
 Terr_out2(Terr_out2 > 5000) = NaN; 
@@ -139,7 +147,7 @@ Terr_out2(Terr_out2 > 5000) = NaN;
 %% Output to drain struct
 Ce = nanmean(Ce_err_out(:)); 
 Ce_unc = nanstd(Ce_err_out(:)); 
-tKP = nanmean(Terr_out); 
+tKP = nanmean(Terr_out2); 
 tKP_unc = nanstd(Terr_out); 
 DrainStruct.DS_nodes = length(S); 
 DrainStruct.Ce = Ce; 
@@ -147,8 +155,12 @@ DrainStruct.Ce_unc = Ce_unc;
 DrainStruct.A_ds = Ads; 
 DrainStruct.tKP = tKP; 
 DrainStruct.tKP_uncorr_unc = tKP_unc; 
+% DrainStruct.tKP_corr_unc = nanstd(Terr_out2); 
 DrainStruct.S = S; 
 DrainStruct.n = n; 
-DrainStruct.tKP_corr_unc = tKP * (K_unc / K); 
-DrainStruct.tKP_tot_unc = sqrt((DrainStruct.tKP_corr_unc .^2) + (DrainStruct.tKP_uncorr_unc .^2));
+% DrainStruct.tKP_tot_unc = DrainStruct.tKP_uncorr_unc + DrainStruct.tKP_corr_unc; 
+DrainStruct.tKP_tot_unc = nanstd(Terr_out2); 
+% DrainStruct.tKP_corr_unc = tKP * (K_unc / K); 
+% DrainStruct.tKP_tot_unc = sqrt((DrainStruct.tKP_corr_unc .^2) + (DrainStruct.tKP_uncorr_unc .^2));
+DrainStruct.tKP_corr_unc = sqrt(DrainStruct.tKP_tot_unc^2 - DrainStruct.tKP_uncorr_unc^2); 
 DrainStruct.T_all_out = sort(Terr_out2); 

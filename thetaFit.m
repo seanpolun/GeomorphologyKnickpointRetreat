@@ -17,8 +17,8 @@ function DrainStruct = thetaFit(DrainStruct, clipping)
 % 
 
 %% Condition Data
-AreaNoise = 0.125; % 0.25
-SlopeNoise = 0.15 ;   % 0.5
+AreaNoise = 0.75 ; % 0.25
+SlopeNoise = 0.5 ;   % 0.5
 
 nx = 100; % lower limit of points (will interpolate to this if below
 ux = 500; % upper limit of points (will downsample to this if above)

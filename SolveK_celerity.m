@@ -66,10 +66,7 @@ for i = 1:numSamps
     end
     
 end
-K = nanmean(nanmean(K_out));
-if numSamps > 1
-    K_unc = nanstd(nanstd(K_out));
-else 
-    K_unc = nanstd(K_out); 
+K = nanmean(K_out(:));
+K_unc = nanstd(K_out(:)); 
 end
 
